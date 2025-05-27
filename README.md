@@ -10,7 +10,7 @@
 - 🐍 Python 3.10+
 - 🐳 Docker & Docker Compose
 - 🗃️ SQLite3
-- 🤗 Transformers (modelo preentrenado desde Hugging Face)
+- 🤗 Transformers [modelo preentrenado desde Hugging Face](https://huggingface.co/R2E-Gym/R2EGym-14B-Agent#direct-use)
 - 🌐 HTML/CSS/JS (para el frontend embebido)
 - 🧪 Uvicorn (como servidor ASGI)
 
@@ -23,7 +23,7 @@ En_train_ame/
 │
 ├── app/
 │ ├── main.py # Código principal de la API
-│ ├── model/ # Carga del modelo de Hugging Face
+│ ├── basedatos.py/ # Creación de la base de datos
 │ └── templates/ # Archivos HTML
 │
 ├── usuarios.db # Base de datos SQLite
