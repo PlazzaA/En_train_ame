@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ejercicios</title>
+    <style>
+        /* Estilos CSS (los mismos que antes, o puedes ajustarlos) */
+        :root {
+            --primary-color: #3498db;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --input-border: #ddd;
+            --btn-hover: #2980b9;
+            --delete-color: #e74c3c; /* Color para el botón de eliminar */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .exercise-list {
+            margin-bottom: 20px;
+        }
+
+        .exercise-item {
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            position: relative; /* Para posicionar el botón de eliminar */
+        }
+
+        .exercise-item h3 {
+            color: var(--text-color);
+            margin-top: 0;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .add-data-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            align-items: center;
+        }
+
+        .add-data-form label {
+            color: var(--text-color);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .add-data-form input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .add-data-form button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-data-form button:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .add-exercise-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .add-exercise-form input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .add-exercise-form button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-exercise-form button:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .data-display {
+            margin-top: 10px;
+            border-top: 1px solid var(--input-border);
+            padding-top: 10px;
+            display: none;
+        }
+
+        .data-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .data-list li {
+            margin-bottom: 5px;
+        }
+
+        .success-message {
+            color: var(--secondary-color);
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .delete-exercise-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: var(--delete-color);
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-exercise-btn:hover {
+            background-color: darken(var(--delete-color), 10%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Ejercicios</h1>
+
+        <div class="add-exercise-form">
+            <form id="add-exercise-form" action="/ejercicios/create" method="post">
+                <input type="text" name="nombre_ejercicio" placeholder="Nombre del ejercicio" required>
+                <button type="submit">Añadir Ejercicio</button>
+            </form>
+        </div>
+
+        <div class="exercise-list">
+            <h2>Ejercicios Registrados</h2>
+            {% for ejercicio in ejercicios %}
+                <div class="exercise-item" data-nombre-ejercicio="{{ ejercicio.nombre_ejercicio }}">
+                    <h3 onclick="toggleDataDisplay(this)">{{ ejercicio.nombre_ejercicio }}</h3>
+                    <button class="delete-exercise-btn" onclick="deleteEjercicio('{{ ejercicio.nombre_ejercicio }}', this)">
+                        Eliminar
+                    </button>
+                    <form class="add-data-form" id="add-data-form-{{ loop.index }}" method="post">
+                        <input type="hidden" name="nombre_ejercicio" value="{{ ejercicio.nombre_ejercicio }}">
+                        <label for="series-{{ loop.index }}">Series:</label>
+                        <input type="number" id="series-{{ loop.index }}" name="series" min="1" required>
+                        <label for="repeticiones-{{ loop.index }}">Repeticiones:</label>
+                        <input type="number" id="repeticiones-{{ loop.index }}" name="repeticiones" min="1" required>
+                        <label for="peso_maximo-{{ loop.index }}">Peso Máximo (kg):</label>
+                        <input type="number" id="peso_maximo-{{ loop.index }}" name="peso_maximo" step="0.1" min="0" required>
+                        <button type="button" onclick="addData(this, { user_id })">Añadir Datos</button>
+                        <div class="success-message" id="success-message-{{ loop.index }}"></div>
+                    </form>
+                    <div class="data-display" id="data-display-{{ loop.index }}">
+                        <h4>Historial de Datos:</h4>
+                        <ul class="data-list" id="data-list-{{ loop.index }}">
+                            </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        async function addData(button, userId) {
+            const form = button.closest('form');
+            const formData = new FormData(form);
+            const nombreEjercicio = formData.get('nombre_ejercicio');
+            const successMessageDiv = form.querySelector('.success-message');
+
+            try {
+                const response = await fetch('/ejercicios/add_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(formData).toString()
+                });
+
+                if (response.ok) {
+                    successMessageDiv.textContent = "Datos añadidos correctamente";
+                    successMessageDiv.style.display = 'block';
+                    setTimeout(() => {
+                        successMessageDiv.style.display = 'none';
+                    }, 3000);
+                    loadEjercicioData(nombreEjercicio, userId, form.closest('.exercise-item')); // Cargar datos después de añadir
+                } else {
+                    throw new Error('Error al añadir los datos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al añadir los datos');
+            }
+        }
+
+        function toggleDataDisplay(header) {
+            const item = header.parentNode;
+            const dataDisplay = item.querySelector('.data-display');
+            dataDisplay.style.display = dataDisplay.style.display === 'none' ? 'block' : 'none';
+            if (dataDisplay.style.display === 'block') {
+                const nombreEjercicio = item.dataset.nombreEjercicio;
+                const userId = { user_id };
+                loadEjercicioData(nombreEjercicio, userId, item);
+            }
+        }
+
+        async function loadEjercicioData(nombreEjercicio, userId, item) {
+            const dataList = item.querySelector('.data-list');
+            dataList.innerHTML = '';
+            try {
+                const response = await fetch(`/ejercicios/<span class="math-inline">\{nombreEjercicio\}/data?user\_id\=</span>{userId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            const li = document.createElement('li');
+                            li.textContent = `Fecha: ${item.fecha}, Series: ${item.series}, Repeticiones: ${item.repeticiones}, Peso: ${item.peso_maximo} kg`;
+                            dataList.appendChild(li);
+                        });
+                    } else {
+                        dataList.innerHTML = '<li>No hay datos disponibles para este ejercicio.</li>';
+                    }
+                } else {
+                    throw new Error('Error al cargar los datos del ejercicio');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                dataList.innerHTML = '<li>Error al cargar los datos.</li>';
+            }
+        }
+
+        async function deleteEjercicio(nombreEjercicio, button) {
+            if (confirm(`¿Seguro que quieres eliminar el ejercicio "${nombreEjercicio}"?`)) {
+                try {
+                    const response = await fetch('/ejercicios/delete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `nombre_ejercicio=${encodeURIComponent(nombreEjercicio)}`
+                    });
+
+                    if (response.ok) {
+                        button.closest('.exercise-item').remove();
+                        alert('Ejercicio eliminado correctamente');
+                    } else {
+                        throw new Error('Error al eliminar el ejercicio');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al eliminar el ejercicio');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

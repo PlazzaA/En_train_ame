@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con el Modelo</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --user-msg-color: #3498db;
+            --bot-msg-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --light-text: #7f8c8d;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--user-msg-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: var(--bot-msg-color);
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+        .input-container {
+            padding: 15px;
+            background-color: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        #user-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        #send-button {
+            padding: 12px 25px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        #send-button:hover {
+            background-color: #27ae60;
+        }
+        .timestamp {
+            display: block;
+            font-size: 12px;
+            color: var(--light-text);
+            margin-top: 5px;
+            text-align: right;
+        }
+        @media (max-width: 600px) {
+            .message {
+                max-width: 90%;
+            }
+            .input-container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Asistente de Gimnasio</h1>
+    </div>
+    <div class="chat-container" id="chat-container">
+        <!-- Mensajes aparecerán aquí -->
+    </div>
+    <div class="input-container">
+        <input type="text" id="user-input" placeholder="Escribe tu mensaje..." autocomplete="off">
+        <button id="send-button">Enviar</button>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+            
+            const messageContent = document.createElement('div');
+            messageContent.textContent = text;
+            messageDiv.appendChild(messageContent);
+            
+            const timestamp = document.createElement('span');
+            timestamp.classList.add('timestamp');
+            timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            messageDiv.appendChild(timestamp);
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            addMessage(message, true);
+            userInput.value = '';
+            
+            try {
+                const response = await fetch('/modelo/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `user_input=${encodeURIComponent(message)}`
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                
+                const data = await response.json();
+                addMessage(data.response, false);
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage("Lo siento, hubo un error al procesar tu solicitud.", false);
+            }
+        }
+        
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Enfocar el input al cargar
+        userInput.focus();
+        
+        // Auto-ajustar altura del input
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    </script>
+</body>
+</html>
